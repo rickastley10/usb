@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>snake</title>
+<style>
+    body {
+    margin: 0;
+    background: #111;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    width: 100vw;
+    height: 100vh;
+}
+    canvas {
+    background: black;
+    touch-action: none;
+
+    width: min(100vw, 100vh);
+    height: min(100vw, 100vh);
+}
+    .controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+    gap: 5px;
+}
+    .controls-row {
+    display: flex;
+    gap: 5px;
+}
+    button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 5px;
+    cursor: pointer;
+    min-width: 60px;
+}
+    button:active {
+    background: #555;
+}
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+<div class="controls">
+    <button onclick="
+    if(di!==2){
+        di=1
+    }
+    ">
+        up
+    </button>
+    <div class="controls-row">
+        <button onclick="
+        if(di!==4){
+            di=3
+        }
+        ">
+            left
+        </button>
+        <button onclick="
+        if(di!==3){
+            di=4
+        }
+        ">
+            right
+        </button>
+    </div>
+    <button onclick="
+    if(di!==1){
+        di=2
+    }
+    ">
+        down
+    </button>
+<h1></h1>
+    <button onclick="
+    if(menu===1){
+        menu=0
+    }
+    else if(menu===0){
+        menu=1
+    }
+    ">
+        menu
+    </button>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const WINDOW_WIDTH = 400;
+const WINDOW_HEIGHT = 400;
+const w = 20;
+const h = 20;
+
+/* ============================================================
+   GLOBALS
+   ============================================================ */
+const canvas = document.getElementById("game");
+canvas.width = WINDOW_WIDTH;
+canvas.height = WINDOW_HEIGHT;
+
+const ctx = canvas.getContext("2d");
+
+let running = true;
+let dir = "right";
+
+/* ============================================================
+   INPUT
+   ============================================================ */
+const keys = {};
+
+window.addEventListener("keydown", (e) => {
+    keys[e.key] = true;
+});
+
+window.addEventListener("keyup", (e) => {
+    keys[e.key] = false;
+});
+
+/* ============================================================
+   UNIVERSAL INPUT (Single handler for Mouse + Touch)
+   ============================================================ */
+function handleInput(e) {
+    e.preventDefault();
+    
+    let clientX, clientY;
+    if (e.touches) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY; 
+    } else {
+        clientX = e.clientX;
+        clientY = e.clientY;  
+    }
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;  
+    
+    // Scale coordinates to match canvas size
+    const scaleX = WINDOW_WIDTH / rect.width;
+    const scaleY = WINDOW_HEIGHT / rect.height;
+    const canvasX = x * scaleX;
+    const canvasY = y * scaleY;
+
+
+}
+
+canvas.addEventListener("touchstart", handleInput);
+canvas.addEventListener("mousedown", handleInput);
+
+/* ============================================================
+   GAME STATE
+   ============================================================ */
+let seg = [];
+for(let i=0; i<4; i++){
+    seg.push({ x: 200 - i*w,
+                y: 200 
+            });
+}
+let hx=200
+let hy=200
+
+let bx=300
+let by=300
+
+let di = 1 // 1 - up     2 - down     3 - left     4 - right
+
+let menu=0
+
+let score=0
+
+/* ============================================================
+   MAIN LOOP
+   ============================================================ */
+function game_loop() {
+    if (!running) return;
+    /* ===== RENDER ===== */
+        //clear screen
+        ctx.fillStyle="#000000"
+        ctx.fillRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
+
+        
+        ctx.font = "15px Arial";
+
+        if(menu===0){
+
+            
+            if (keys["w"]){
+                if(di!==2){
+                    di = 1
+                }
+                
+            }
+            if (keys["s"]){
+                if(di!==1){
+                    di = 2
+                }
+            }
+            if (keys["d"]){
+                if(di!==3){
+                    di = 4
+                }
+            }
+            if (keys["a"]){
+                if(di!==4){
+                    di = 3
+                }
+            }
+
+
+
+            if (keys["ArrowUp"]){
+                if(di!==2){
+                    di = 1
+                }
+                
+            }
+            if (keys["ArrowDown"]){
+                if(di!==1){
+                    di = 2
+                }
+            }
+            if (keys["ArrowRight"]){
+                if(di!==3){
+                    di = 4
+                }
+            }
+            if (keys["ArrowLeft"]){
+                if(di!==4){
+                    di = 3
+                }
+            }
+
+
+
+            if (keys["p"]){
+                menu=1
+            }
+            if (keys[" "]){
+                menu=1
+            }
+
+
+            if(di===1){
+                hy=hy-h
+            }
+            if(di===2){
+                hy=hy+h
+            }
+            if(di===3){
+                hx=hx-w
+            }
+            if(di===4){
+                hx=hx+w
+            }
+            
+            if (hx === bx && hy ===by){
+                bx = Math.floor(Math.random()*20)*20
+                by = Math.floor(Math.random()*20)*20
+            }
+            else{
+                seg.pop()
+            }
+            for(let i of seg){
+                if(i["x"]===hx && i["y"]===hy){
+                    seg = [];
+                    for(let i=0; i<4; i++){
+                        seg.push({ x: 200 - i*w,
+                                    y: 200 
+                                });
+                    }
+                    hx=200
+                    hy=200
+
+                    bx=300
+                    by=300
+
+                    di = 1 // 1 - up     2 - down     3 - left     4 - right
+
+                    menu=0
+
+                    score=0
+                }
+            }
+            seg.reverse()
+            seg.push({
+                "x":hx,
+                "y":hy
+            })
+            seg.reverse()
+            
+
+
+            if(hx>400){
+                hx=0
+            }
+            if(hx<0){
+                hx=400
+            }
+            if(hy>400){
+                hy=0
+            }
+            if(hy<0){
+                hy=400
+            }
+
+
+            
+
+            for(let i of seg){
+                ctx.fillStyle="#00ff00"
+                ctx.fillRect(i["x"], i["y"], w, h)
+            }
+            ctx.fillStyle="#ff0000"
+            ctx.fillRect(bx, by, w, h)
+        }
+        else if(menu===1){
+
+            if (keys["p"]){
+                menu=0
+            }
+            if (keys[" "]){
+                menu=0
+            }
+
+
+            for(let i of seg){
+                ctx.fillStyle="#00ff00"
+                ctx.fillRect(i["x"], i["y"], w, h)
+            }
+            
+            ctx.fillStyle="#ff0000"
+            ctx.fillRect(bx, by, w, h)
+
+
+            ctx.font = "30px Arial";
+            ctx.fillStyle="#ff0000"
+            ctx.fillText("SNAKE GAME",100+2, 100+2)
+            ctx.fillStyle="#0000ff"
+            ctx.fillText("SNAKE GAME",100-2, 100-2)
+            ctx.fillStyle="#ffffff"
+            ctx.fillText("SNAKE GAME",100, 100)
+        }
+        
+
+    setTimeout(() => {
+        requestAnimationFrame(game_loop);
+    }, 100);
+}
+
+game_loop();
+</script>
+</body>
+</html>
